@@ -1,0 +1,6 @@
+java/target/
+c++/build
+python/__pycache__
+python/geoinfo_pb2.py
+python/geoinfo_pb2.pyi 
+python/geoinfo_pb2_grpc.py

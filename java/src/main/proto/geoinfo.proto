@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "ch.semafor.geoinfo";
+option java_outer_classname = "CityFinderProto";
+
+package geoinfo;
+
+service CityFinder {
+  rpc FindByName(CityName) returns (City) {}
+  rpc FindByLocationNear(CityDist) returns(stream CityDist) {}
+}
+
+message CityName {
+  string name = 1;
+}
+
+message City {
+  string name = 1;
+  string country = 2;
+  int64 population = 3;
+  double lon = 4;
+  double lat = 5;
+}
+
+message CityDist {
+  City city = 1;
+  double dist = 2;
+}
