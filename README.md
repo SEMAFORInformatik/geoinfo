@@ -22,4 +22,4 @@ Prerequisites
 
 * c++: cmake grpc
 * java: mvn
-* python: grpcio
+* python: grpcio grpcio-tools
