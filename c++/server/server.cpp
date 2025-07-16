@@ -136,8 +136,8 @@ void RunServer(const std::string& db_path) {
 int main(int argc, char** argv) {
   absl::ParseCommandLine(argc, argv);
   absl::InitializeLog();
-  // Expect only arg: --db_path=path/to/cities.txt.
-  std::string db = argv[1]; //geoinfo::GetDbFileContent(argc, argv);
+  // Expect only arg: path/to/cities.txt.
+  std::string db = argv[1];
   RunServer(db);
 
   return 0;
