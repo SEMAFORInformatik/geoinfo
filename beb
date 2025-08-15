@@ -1,0 +1,94 @@
+import math
+import grpc
+from concurrent import futures
+import sys
+import os
+
+
+
+current_directory = os.path.dirname(os.path.realpath(__file__))
+parent_directory = os.path.dirname(current_directory)
+sys.path.append(parent_directory)
+
+import geoinfo_pb2
+import geoinfo_pb2_grpc
+from geoinfo_pb2_grpc import CityFinderStub as stub
+from geoinfo_pb2_grpc import CityFinderServicer
+
+
+
+def distance(from_city, to_city):
+    if (pow(from_city.lat - to_city.lat, 2) + pow(from_city.lon - to_city.lon, 2)) < 1e-3:
+        return 0.0
+
+    k = math.pi / 180
+    a = from_city.lat * k
+    b = from_city.lon * k
+    c = to_city.lat * k
+    d = to_city.lon * k
+
+    x = math.sin(a) * math.sin(c) + math.cos(a) * math.cos(c) * math.cos(b - d)
+    radius = 6371.007176  # Earth radius in km
+
+    if x > 1:
+        return radius * math.acos(1.0)
+    return radius * math.acos(x)
+
+
+class CityFinderServicer(geoinfo_pb2_grpc.CityFinderServicer):
+    def __init__(self, db_path):
+        self.city_list = []
+        self.load_db(db_path)
+
+    def load_db(self, path):
+        with open(path, 'r') as f:
+            for line in f:
+                parts = line.strip().split('\t')
+                if len(parts) < 5:
+                    continue
+                city = geoinfo_pb2.City()
+                city.name = parts[0]
+                city.country = parts[1]
+                city.population = int(parts[2])
+                city.lon = float(parts[3])
+                city.lat = float(parts[4])
+                self.city_list.append(city)
+
+    def FindByName(self, request, context):
+        for city in self.city_list:
+            if city.name == request.name:
+                return city
+        context.set_code(grpc.StatusCode.NOT_FOUND)
+        context.set_details('City not found')
+        return geoinfo_pb2.City()
+
+    def FindByLocationNear(self, request, context):
+        loc = request.city
+        dist_limit = request.dist
+        neighbors = []
+
+        for city in self.city_list:
+            d = distance(loc, city)
+            if 0 < d < dist_limit:
+                city_dist = geoinfo_pb2.CityDist()
+                city_dist.city.CopyFrom(city)
+                city_dist.dist = d
+                neighbors.append(city_dist)
+
+        neighbors.sort(key=lambda x: x.dist)
+        for neighbor in neighbors:
+            yield neighbor
+
+
+def serve(db_path):
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    geoinfo_pb2_grpc.add_CityFinderServicer_to_server(CityFinderServicer(db_path), server)
+    server.add_insecure_port('[::]:50051')
+    print("Server listening on port 50051...")
+    server.start()
+    server.wait_for_termination()
+
+
+if __name__ == '__main__':
+    db_file = sys.argv[1]
+    serve(db_file)
