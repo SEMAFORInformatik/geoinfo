@@ -6,7 +6,7 @@ of grpc clients and server using the programming languages:
 
 * c++: grpc_server
 * java: ch.semafor.geoinfo.CityFinder
-* python: city_finder_client.py
+* python: city_finder_client.py server.py
 
 The server loads the list of cities with
 their geo locations included in the text file cities.txt
