@@ -1,20 +1,11 @@
 import math
 import grpc
 from concurrent import futures
-import sys
-import os
-
-
-
-current_directory = os.path.dirname(os.path.realpath(__file__))
-parent_directory = os.path.dirname(current_directory)
-sys.path.append(parent_directory)
 
 import geoinfo_pb2
 import geoinfo_pb2_grpc
 from geoinfo_pb2_grpc import CityFinderStub as stub
 from geoinfo_pb2_grpc import CityFinderServicer
-
 
 
 def distance(from_city, to_city):
@@ -90,5 +81,6 @@ def serve(db_path):
 
 
 if __name__ == '__main__':
+    import sys
     db_file = sys.argv[1]
     serve(db_file)
