@@ -1,4 +1,5 @@
 import math
+import logging
 import grpc
 from concurrent import futures
 
@@ -44,6 +45,7 @@ class CityFinderServicer(geoinfo_pb2_grpc.CityFinderServicer):
                 city.lon = float(parts[3])
                 city.lat = float(parts[4])
                 self.city_list.append(city)
+        logging.info("Total %d cities", len(self.city_list))
 
     def FindByName(self, request, context):
         for city in self.city_list:
@@ -75,12 +77,14 @@ def serve(db_path):
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     geoinfo_pb2_grpc.add_CityFinderServicer_to_server(CityFinderServicer(db_path), server)
     server.add_insecure_port('[::]:50051')
-    print("Server listening on port 50051...")
+    logging.info("Server listening on port 50051...")
     server.start()
     server.wait_for_termination()
 
 
 if __name__ == '__main__':
     import sys
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s %(message)s')
     db_file = sys.argv[1]
     serve(db_file)
